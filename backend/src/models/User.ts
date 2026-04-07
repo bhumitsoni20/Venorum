@@ -1,28 +1,33 @@
 import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcrypt';
 
 export interface IUser extends Document {
   name: string;
-  email: string;
-  password?: string;
+  email?: string;
+  phone?: string;
+  firebaseUid: string;
   role: 'user' | 'admin';
-  matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
 const userSchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: true,
+      default: 'Unknown User',
     },
     email: {
       type: String,
-      required: true,
+      sparse: true,
       unique: true,
     },
-    password: {
+    phone: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    firebaseUid: {
       type: String,
       required: true,
+      unique: true,
     },
     role: {
       type: String,
@@ -35,20 +40,5 @@ const userSchema: Schema = new Schema(
   }
 );
 
-userSchema.methods.matchPassword = async function (enteredPassword: string) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Encrypt password using bcrypt before saving
-userSchema.pre('save', async function (this: IUser) {
-  if (!this.isModified('password')) {
-    return;
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password as string, salt);
-});
-
 const User = mongoose.model<IUser>('User', userSchema);
-
 export default User;

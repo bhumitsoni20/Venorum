@@ -14,6 +14,7 @@ export const getUserProfile = async (req: AuthRequest, res: Response) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       });
     } else {
@@ -35,10 +36,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
     if (user) {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
-
-      if (req.body.password) {
-        user.password = req.body.password;
-      }
+      user.phone = req.body.phone || user.phone;
 
       const updatedUser = await user.save();
 
@@ -46,6 +44,7 @@ export const updateUserProfile = async (req: AuthRequest, res: Response) => {
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        phone: updatedUser.phone,
         role: updatedUser.role,
       });
     } else {
