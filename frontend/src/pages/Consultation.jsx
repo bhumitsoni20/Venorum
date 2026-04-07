@@ -18,8 +18,8 @@ const Consultation = () => {
 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          <div className="glass p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group">
-             <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/30 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
+          <div className=" glass  p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group">
+             <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/20 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
                 <Video size={24} className="text-luxury-gold" />
              </div>
              <h3 className="text-xl font-serif mb-4">Live Video Chat</h3>
@@ -27,10 +27,10 @@ const Consultation = () => {
              <button className="w-full border border-luxury-white hover:border-luxury-gold py-3 uppercase text-xs tracking-widest hover:text-luxury-gold transition-colors">Start Session</button>
           </div>
 
-          <div className="glass p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group relative overflow-hidden">
+          <div className=" glass  p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group relative overflow-hidden">
              <div className="absolute inset-0 bg-luxury-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
              <div className="relative z-10">
-                 <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/30 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
+                 <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/20 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
                     <Calendar size={24} className="text-luxury-gold" />
                  </div>
                  <h3 className="text-xl font-serif mb-4">Book Appointment</h3>
@@ -42,8 +42,8 @@ const Consultation = () => {
              </div>
           </div>
 
-          <div className="glass p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group">
-             <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/30 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
+          <div className=" glass  p-10 border border-luxury-gold/20 text-center hover:border-luxury-gold/50 transition-colors group">
+             <div className="w-16 h-16 mx-auto bg-luxury-gray border border-luxury-gold/20 rounded-full flex items-center justify-center mb-6 group-hover:bg-luxury-gold/10 transition-colors">
                 <MessageSquare size={24} className="text-luxury-gold" />
              </div>
              <h3 className="text-xl font-serif mb-4">Live Messaging</h3>

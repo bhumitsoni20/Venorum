@@ -23,11 +23,11 @@ const Profile = () => {
                  <Package size={18} />
                  <span className="text-sm uppercase tracking-wide">My Orders</span>
                </a>
-               <a href="#" className="flex items-center space-x-4 p-4 hover:bg-luxury-gray border-l-2 border-transparent hover:border-gray-500 text-gray-400 hover:text-luxury-white transition-colors">
+               <a href="#" className="flex items-center space-x-4 p-4 hover:bg-luxury-gray border-l-2 border-transparent hover:border-luxury-gold/20 text-gray-400 hover:text-luxury-white transition-colors">
                  <Heart size={18} />
                  <span className="text-sm uppercase tracking-wide">Wishlist</span>
                </a>
-               <a href="#" className="flex items-center space-x-4 p-4 hover:bg-luxury-gray border-l-2 border-transparent hover:border-gray-500 text-gray-400 hover:text-luxury-white transition-colors">
+               <a href="#" className="flex items-center space-x-4 p-4 hover:bg-luxury-gray border-l-2 border-transparent hover:border-luxury-gold/20 text-gray-400 hover:text-luxury-white transition-colors">
                  <Settings size={18} />
                  <span className="text-sm uppercase tracking-wide">Account Details</span>
                </a>
@@ -44,7 +44,7 @@ const Profile = () => {
             
             <div className="space-y-6">
                {[1, 2].map((order) => (
-                  <div key={order} className="border border-luxury-gold/10 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 hover:border-luxury-gold/30 transition-colors">
+                  <div key={order} className="border border-luxury-gold/10 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 hover:border-luxury-gold/20 transition-colors">
                      <div className="w-24 h-24 bg-luxury-gray shrink-0 rounded-sm overflow-hidden">
                         <img src="https://images.unsplash.com/photo-1605100804763-247f66156ce4?q=80&w=200&auto=format&fit=crop" className="w-full h-full object-cover" alt="Item" />
                      </div>
@@ -53,8 +53,8 @@ const Profile = () => {
                            <h4 className="font-serif text-lg">The Aurelia Ring</h4>
                            <span className="text-luxury-gold text-sm font-medium">₹3,45,000</span>
                         </div>
-                        <p className="text-xs text-gray-500 tracking-wider mb-4">ORDER #VN-84729 • MAY {12 + order}, 2026</p>
-                        <div className="inline-block px-3 py-1 bg-luxury-gray border border-gray-700 text-[10px] uppercase tracking-wider text-gray-300">
+                        <p className="text-xs text-gray-400 tracking-wider mb-4">ORDER #VN-84729 • MAY {12 + order}, 2026</p>
+                        <div className="inline-block px-3 py-1 bg-luxury-gray border border-luxury-gold/20 text-[10px] uppercase tracking-wider text-gray-400">
                            Processing
                         </div>
                      </div>

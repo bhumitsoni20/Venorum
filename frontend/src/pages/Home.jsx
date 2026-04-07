@@ -186,7 +186,7 @@ const Home = () => {
               type="video/mp4"
             />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-luxury-black/30 via-luxury-black/50 to-luxury-black"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-luxury-black/10 via-luxury-black/60 to-luxury-black"></div>
         </div>
 
         <div
@@ -349,7 +349,7 @@ const Home = () => {
           <div className="absolute bottom-20 w-full flex justify-center">
             <Link
               to="/shop"
-              className="bg-luxury-gold text-luxury-black hover:bg-luxury-white px-10 py-4 uppercase tracking-widest text-xs font-semibold shadow-[0_0_20px_rgba(212,175,55,0.3)] transition-all"
+              className="glass border border-luxury-gold/30 text-luxury-white hover:bg-luxury-gold hover:text-luxury-black px-10 py-4 uppercase tracking-widest text-xs font-semibold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] transition-all"
             >
               Configure Yours
             </Link>
@@ -362,7 +362,7 @@ const Home = () => {
         ref={sec4Ref}
         className="relative py-32 bg-luxury-gray border-t border-luxury-gold/5 flex flex-col items-center justify-center font-serif"
       >
-        <div className="container mx-auto px-6 text-center z-10 glass border border-luxury-gold/10 p-16 max-w-4xl relative overflow-hidden rounded-sm">
+        <div className="container mx-auto px-6 text-center z-10  glass  border border-luxury-gold/10 p-16 max-w-4xl relative overflow-hidden rounded-sm">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-luxury-gold/10 rounded-full blur-[100px]"></div>
 
           {/* Typing Effect Container */}
@@ -381,7 +381,7 @@ const Home = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <button className="flex items-center justify-center space-x-3 bg-luxury-gold text-luxury-black hover:bg-luxury-white font-sans px-8 py-4 uppercase tracking-widest text-xs transition-all border border-luxury-gold shadow-lg hover:-translate-y-1">
+            <button className="flex items-center justify-center space-x-3 glass text-luxury-white hover:bg-luxury-gold hover:text-luxury-black font-sans px-8 py-4 uppercase tracking-widest text-xs transition-all border border-luxury-gold/50 shadow-lg hover:-translate-y-1">
               <Video size={16} />
               <span>Live Consultation</span>
             </button>
@@ -442,9 +442,9 @@ const Home = () => {
                   alt={cat.title}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70 group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/20 to-transparent flex items-end p-8">
+                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/60 to-transparent flex items-end p-8">
                   <div className="w-full flex justify-between items-center text-luxury-white group-hover:text-luxury-gold transition-colors">
-                    <h3 className="font-serif text-2xl">{cat.title}</h3>
+                    <h3 className="font-serif text-2xl drop-shadow-md">{cat.title}</h3>
                     <ArrowRight
                       size={20}
                       className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500"
@@ -469,7 +469,8 @@ const Home = () => {
 
       {/* ================= SECTION 6: ASSURANCE & MEMBERSHIP ================= */}
       <section className="py-40 bg-[url('https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center bg-fixed relative border-t border-luxury-gold/20">
-        <div className="absolute inset-0 bg-luxury-black/80 backdrop-blur-sm"></div>
+        <div className="absolute inset-0 bg-luxury-black/50 backdrop-blur-lg"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-transparent to-luxury-black pointer-events-none"></div>
         <div className="container mx-auto px-6 relative z-10 text-center flex flex-col items-center">
           <ShieldCheck
             size={64}
@@ -490,7 +491,7 @@ const Home = () => {
             </span>
           </motion.h2>
 
-          <p className="text-gray-300 font-light max-w-2xl mx-auto leading-relaxed mb-12">
+          <p className="text-gray-400 font-light max-w-2xl mx-auto leading-relaxed mb-12">
             From ethical sourcing to lifelong warranties, every piece from
             Venorum is certified globally and backed by our master artisan
             guarantee. Join our society to preserve your legacy forever.
@@ -503,9 +504,50 @@ const Home = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <button className="bg-luxury-gold text-luxury-black font-semibold font-sans px-12 py-5 uppercase tracking-widest text-sm shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] hover:bg-luxury-white transition-all">
+            <button className="glass border border-luxury-gold/50 text-luxury-white hover:text-luxury-black font-semibold font-sans px-12 py-5 uppercase tracking-widest text-sm shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] hover:bg-luxury-gold transition-all">
               Join Membership
             </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 7: RATES PREVIEW ================= */}
+      <section className="py-24 bg-luxury-black border-t border-luxury-gold/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-luxury-gold/5 via-luxury-black to-luxury-black pointer-events-none"></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className=" glass  border border-luxury-gold/20 max-w-5xl mx-auto p-10 md:p-14 relative flex flex-col md:flex-row items-center justify-between shadow-[0_0_40px_rgba(212,175,55,0.05)] rounded-sm"
+          >
+            <div className="mb-8 md:mb-0 text-center md:text-left">
+              <h3 className="text-luxury-gold text-[10px] tracking-[0.3em] font-medium uppercase mb-2">Market Intelligence</h3>
+              <h2 className="text-2xl md:text-3xl font-serif text-luxury-white mb-6">Today's Gold & Silver Rates</h2>
+              
+              <div className="flex flex-col md:flex-row gap-6 md:gap-12 text-center md:text-left">
+                <div>
+                  <p className="text-gray-400 text-xs tracking-widest uppercase mb-1">Gold (24K)</p>
+                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">₹74,500 <span className="text-xs text-luxury-gold/60 font-sans font-light">/ 10g</span></p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs tracking-widest uppercase mb-1">Silver</p>
+                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">₹85,200 <span className="text-xs text-luxury-gold/60 font-sans font-light">/ kg</span></p>
+                </div>
+              </div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-6">Last Updated: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+
+            <Link 
+              to="/rates" 
+              className="group relative inline-flex items-center justify-center overflow-hidden border border-luxury-gold/50 bg-luxury-black/40 backdrop-blur-md px-8 py-4 text-xs tracking-[0.2em] font-medium uppercase transition-all duration-500 hover:bg-luxury-gold hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] whitespace-nowrap"
+            >
+              <span className="relative z-10 group-hover:text-luxury-black transition-colors duration-500 flex items-center space-x-3">
+                 <span>View Full Rates</span>
+                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Link>
           </motion.div>
         </div>
       </section>

@@ -75,7 +75,7 @@ const ProductDetail = () => {
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: 0.4 }}
-             className="text-2xl text-gray-300 font-light tracking-wide mb-8"
+             className="text-2xl text-gray-400 font-light tracking-wide mb-8"
            >
              {product.price}
            </motion.p>
@@ -114,7 +114,7 @@ const ProductDetail = () => {
                     <span className="block text-sm text-gray-400">Ring Size</span>
                     <span className="text-xs text-luxury-gold underline cursor-pointer hover:text-luxury-white transition-colors">Size Guide</span>
                  </div>
-                 <select className="w-full bg-luxury-gray border border-luxury-gold/30 text-sm py-4 px-6 focus:outline-none focus:border-luxury-gold text-luxury-white">
+                 <select className="w-full bg-luxury-gray border border-luxury-gold/20 text-sm py-4 px-6 focus:outline-none focus:border-luxury-gold text-luxury-white">
                    <option>Select Size (US)</option>
                    <option>5.0</option>
                    <option>5.5</option>
@@ -133,7 +133,7 @@ const ProductDetail = () => {
              className="flex space-x-4 mb-12"
            >
               <button className="flex-grow bg-luxury-gold text-luxury-black hover:bg-luxury-white transition-colors py-4 uppercase tracking-widest text-sm font-medium">Add to Cart</button>
-              <button className="p-4 border border-luxury-gold/30 hover:border-luxury-gold text-luxury-gold transition-colors flex items-center justify-center">
+              <button className="p-4 border border-luxury-gold/20 hover:border-luxury-gold text-luxury-gold transition-colors flex items-center justify-center">
                  <Heart size={20} />
               </button>
            </motion.div>
@@ -146,15 +146,15 @@ const ProductDetail = () => {
              className="grid grid-cols-3 gap-4 border-t border-luxury-gold/10 pt-8"
            >
               <div className="text-center group">
-                 <Truck className="mx-auto text-gray-500 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
+                 <Truck className="mx-auto text-gray-400 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
                  <p className="text-[10px] uppercase tracking-wider text-gray-400">Complimentary<br/>Shipping</p>
               </div>
               <div className="text-center group">
-                 <ShieldCheck className="mx-auto text-gray-500 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
+                 <ShieldCheck className="mx-auto text-gray-400 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
                  <p className="text-[10px] uppercase tracking-wider text-gray-400">Lifetime<br/>Warranty</p>
               </div>
               <div className="text-center group">
-                 <RotateCcw className="mx-auto text-gray-500 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
+                 <RotateCcw className="mx-auto text-gray-400 mb-2 group-hover:text-luxury-gold transition-colors" size={20} strokeWidth={1.5} />
                  <p className="text-[10px] uppercase tracking-wider text-gray-400">30-Day<br/>Returns</p>
               </div>
            </motion.div>
