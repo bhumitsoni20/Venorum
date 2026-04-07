@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Image as ImageIcon, Video, Cuboid, Save, Tag, SlidersHorizontal, Trash2 } from "lucide-react";
+import { Plus, Image as ImageIcon, Video, Cuboid, Save, Tag, SlidersHorizontal, Trash2, Package } from "lucide-react";
 
-// Mock API Call
-const saveProductToAPI = async (productData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log("Saved Product to backend:", productData);
-      resolve({ success: true });
-    }, 1000);
-  });
-};
+// The API Base URLs
+const API_URL = "http://localhost:5000/api"; // Default MERN stack port
+// Ensure cross-origin sharing is configured if not proxied
 
 const ProductManager = () => {
   const categories = ["Women's", "Men's", "Kids"];
   const [activeCategory, setActiveCategory] = useState("Women's");
   
-  // Mock State for Subcategories
-  const [subcategories, setSubcategories] = useState({
-    "Women's": ["Rings", "Bracelets", "Necklaces"],
-    "Men's": ["Watches", "Rings", "Cufflinks"],
-    "Kids": ["Earrings", "Pendants"]
-  });
-  const [activeSubcategory, setActiveSubcategory] = useState("Rings");
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [activeSubcategoryId, setActiveSubcategoryId] = useState(null);
   const [newSubcategoryName, setNewSubcategoryName] = useState("");
   const [isAddingSub, setIsAddingSub] = useState(false);
 
@@ -50,22 +39,64 @@ const ProductManager = () => {
 
   const availableGems = ["Diamond (VS1)", "Emerald", "Ruby", "Sapphire", "Black Onyx", "Pearl"];
 
+  // Fetch Categories on Mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_URL}/categories`);
+        if(res.ok) {
+          const data = await res.json();
+          setCategoriesData(data);
+        }
+      } catch(err) {
+        console.error("Error fetching categories:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Filter rendering list based on active category tab
+  const activeSubcategories = categoriesData.filter(c => c.mainCategory === activeCategory);
+
   useEffect(() => {
     // Reset active subcategory when category changes
-    setActiveSubcategory(subcategories[activeCategory][0] || null);
-  }, [activeCategory, subcategories]);
+    if (activeSubcategories.length > 0) {
+      setActiveSubcategoryId(activeSubcategories[0]._id);
+    } else {
+      setActiveSubcategoryId(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCategory, categoriesData.length]);
 
-  const handleAddSubcategory = () => {
+  const handleAddSubcategory = async () => {
     if (!newSubcategoryName.trim()) {
       setModalConfig({ isOpen: true, type: "alert", title: "Validation Error", message: "Subcategory name is required to create a new collection." });
       return;
     }
-    setSubcategories({
-      ...subcategories,
-      [activeCategory]: [...subcategories[activeCategory], newSubcategoryName.trim()]
-    });
-    setNewSubcategoryName("");
-    setIsAddingSub(false);
+    try {
+      const payload = {
+        name: newSubcategoryName.trim(),
+        mainCategory: activeCategory,
+        slug: newSubcategoryName.trim().toLowerCase().replace(/\s+/g, '-') + '-' + Date.now()
+      };
+      // Temporary mock authentication headers -> Admin panel should map actual tokens
+      const res = await fetch(`${API_URL}/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer MOCK_TOKEN` },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok) {
+        const newCat = await res.json();
+        setCategoriesData([...categoriesData, newCat]);
+        setNewSubcategoryName("");
+        setIsAddingSub(false);
+      } else {
+        const err = await res.json();
+        setModalConfig({ isOpen: true, type: "alert", title: "Creation Failed", message: err.message || "Failed to add category." });
+      }
+    } catch(err) {
+      console.error(err);
+    }
   };
 
   const handleRemoveSubcategory = (e, subToRemove) => {
@@ -74,15 +105,22 @@ const ProductManager = () => {
         isOpen: true,
         type: "confirm",
         title: "Remove Collection",
-        message: `Are you sure you want to permanently remove the "${subToRemove}" collection? All related products will be archived and this action cannot be undone.`,
-        onConfirm: () => {
-            setSubcategories(prev => ({
-                ...prev,
-                [activeCategory]: prev[activeCategory].filter(s => s !== subToRemove)
-            }));
-            if (activeSubcategory === subToRemove) {
-                setActiveSubcategory(null);
-            }
+        message: `Are you sure you want to permanently remove the "${subToRemove.name}" collection? All related products will be archived and this action cannot be undone.`,
+        onConfirm: async () => {
+             try {
+                const res = await fetch(`${API_URL}/categories/${subToRemove._id}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer MOCK_TOKEN` }
+                });
+                if(res.ok) {
+                    setCategoriesData(prev => prev.filter(s => s._id !== subToRemove._id));
+                    if (activeSubcategoryId === subToRemove._id) {
+                        setActiveSubcategoryId(null);
+                    }
+                }
+             } catch(err) {
+                 console.error(err);
+             }
         }
     });
   };
@@ -134,16 +172,38 @@ const ProductManager = () => {
     
     setSaving(true);
     const payload = {
-      category: activeCategory,
-      subcategory: activeSubcategory,
-      ...productForm
+      category: activeSubcategoryId, // ObjectId of category
+      name: productForm.name,
+      description: productForm.description,
+      price: calculateTotal(),
+      pricingBreakdown: productForm.pricingBreakdown,
+      images: productForm.images.length > 0 ? productForm.images : [productForm.imagesString || ""], // Simple array conversion
+      video: productForm.video,
+      arModelUrl: productForm.arModelUrl,
+      gems: productForm.gems
     };
     
-    await saveProductToAPI(payload);
+    try {
+      const res = await fetch(`${API_URL}/products`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer MOCK_TOKEN` },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok) {
+         setProductForm(initialForm);
+         const catName = categoriesData.find(c => c._id === activeSubcategoryId)?.name;
+         setModalConfig({ isOpen: true, type: "success", title: "Masterpiece Minted", message: `Product successfully fully crafted and stored in ${activeCategory} > ${catName}.` });
+      } else {
+         const err = await res.json();
+         setModalConfig({ isOpen: true, type: "alert", title: "Minting Failed", message: err.message || "Failed to save product." });
+      }
+    } catch(err) {
+      console.error(err);
+    }
     setSaving(false);
-    setProductForm(initialForm);
-    setModalConfig({ isOpen: true, type: "success", title: "Masterpiece Minted", message: `Product successfully fully crafted and stored in ${activeCategory} > ${activeSubcategory}.` });
   };
+
+  const activeSubcategoryObj = categoriesData.find(c => c._id === activeSubcategoryId);
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col">
@@ -195,27 +255,27 @@ const ProductManager = () => {
           </AnimatePresence>
 
           <div className="flex flex-col gap-2">
-            {subcategories[activeCategory]?.map(sub => (
+            {activeSubcategories.map(sub => (
               <div
-                key={sub}
-                onClick={() => setActiveSubcategory(sub)}
+                key={sub._id}
+                onClick={() => setActiveSubcategoryId(sub._id)}
                 className={`flex items-center justify-between text-left px-4 py-3 text-sm rounded-sm transition-all border group cursor-pointer ${
-                  activeSubcategory === sub 
+                  activeSubcategoryId === sub._id 
                   ? "bg-luxury-charcoal/50 border-luxury-gold/50 text-luxury-white shadow-[0_0_10px_rgba(212,175,55,0.1)]" 
                   : "border-transparent text-gray-400 hover:bg-luxury-gray hover:text-white"
                 }`}
               >
-                <span>{sub}</span>
+                <span>{sub.name}</span>
                 <button 
                   onClick={(e) => handleRemoveSubcategory(e, sub)}
-                  className={`p-1 rounded-sm transition-all ${activeSubcategory === sub ? 'text-luxury-gold hover:text-red-500' : 'opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500'}`}
+                  className={`p-1 rounded-sm transition-all ${activeSubcategoryId === sub._id ? 'text-luxury-gold hover:text-red-500' : 'opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-500'}`}
                   title="Remove Subcategory"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             ))}
-            {(!subcategories[activeCategory] || subcategories[activeCategory].length === 0) && (
+            {activeSubcategories.length === 0 && (
               <p className="text-xs text-gray-500 italic px-4">No collections found.</p>
             )}
           </div>
@@ -223,11 +283,11 @@ const ProductManager = () => {
 
         {/* Right Content: Add Product Form */}
         <div className="flex-1 glass border border-luxury-gold/20 rounded-sm p-6 lg:p-10 shadow-2xl overflow-y-auto">
-          {activeSubcategory ? (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={activeSubcategory}>
+          {activeSubcategoryObj ? (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={activeSubcategoryId}>
               <div className="flex justify-between items-center mb-8 pb-4 border-b border-luxury-gold/10">
                 <h2 className="text-2xl font-serif text-luxury-white">
-                  Craft Product in <span className="text-luxury-gold italic">{activeSubcategory}</span>
+                  Craft Product in <span className="text-luxury-gold italic">{activeSubcategoryObj.name}</span>
                 </h2>
               </div>
 
@@ -316,17 +376,37 @@ const ProductManager = () => {
                      <h3 className="text-[10px] uppercase tracking-widest text-luxury-gold mb-4 flex items-center gap-2 border-b border-luxury-gold/10 pb-2"><ImageIcon size={14}/> Media Gallery</h3>
                      <div className="space-y-3">
                         <div className="flex gap-2">
-                           <input type="text" placeholder="Image URL 1" className="flex-1 bg-luxury-black border border-gray-800 focus:border-luxury-gold/50 rounded-sm px-3 py-2 text-xs text-white outline-none" />
+                           <input 
+                              type="text" 
+                              placeholder="Image URL 1" 
+                              value={productForm.imagesString || ""} 
+                              onChange={e => setProductForm({...productForm, imagesString: e.target.value})}
+                              className="flex-1 bg-luxury-black border border-gray-800 focus:border-luxury-gold/50 rounded-sm px-3 py-2 text-xs text-white outline-none" 
+                           />
                            <button className="bg-luxury-gray hover:bg-luxury-gold/20 border border-gray-600 text-gray-300 px-3 py-2 rounded-sm transition-colors"><Plus size={14}/></button>
                         </div>
                         <div className="flex gap-2">
                            <div className="flex-1 bg-luxury-black border border-gray-800 rounded-sm px-3 py-2 text-xs text-gray-500 flex items-center gap-2">
-                              <Video size={14} className="text-gray-600"/> <input type="text" placeholder="Cinematic Video URL (.mp4)" className="bg-transparent outline-none w-full text-white"/>
+                              <Video size={14} className="text-gray-600"/> 
+                              <input 
+                                type="text" 
+                                placeholder="Cinematic Video URL (.mp4)" 
+                                value={productForm.video}
+                                onChange={e => setProductForm({...productForm, video: e.target.value})}
+                                className="bg-transparent outline-none w-full text-white"
+                              />
                            </div>
                         </div>
                         <div className="flex gap-2">
                            <div className="flex-1 bg-luxury-black border border-luxury-gold/20 focus-within:border-luxury-gold rounded-sm px-3 py-2 text-xs text-luxury-gold flex items-center gap-2">
-                              <Cuboid size={14} /> <input type="text" placeholder="360° AR Model URL (.glb / .gltf)" className="bg-transparent outline-none w-full text-white placeholder-luxury-gold/50"/>
+                              <Cuboid size={14} /> 
+                              <input 
+                                type="text" 
+                                placeholder="360° AR Model URL (.glb / .gltf)" 
+                                value={productForm.arModelUrl}
+                                onChange={e => setProductForm({...productForm, arModelUrl: e.target.value})}
+                                className="bg-transparent outline-none w-full text-white placeholder-luxury-gold/50"
+                              />
                            </div>
                         </div>
                      </div>

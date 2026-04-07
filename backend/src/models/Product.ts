@@ -4,9 +4,13 @@ export interface IProduct extends Document {
   user: mongoose.Schema.Types.ObjectId;
   category: mongoose.Schema.Types.ObjectId;
   name: string;
-  image: string;
+  images: string[];
+  video?: string;
+  arModelUrl?: string;
   description: string;
+  pricingBreakdown: { id: number; label: string; value: string }[];
   price: number;
+  gems: string[];
   countInStock: number;
   rating?: number;
   numReviews?: number;
@@ -28,18 +32,32 @@ const productSchema: Schema = new Schema(
       type: String,
       required: true,
     },
-    image: {
+    images: {
+      type: [String],
+      default: [],
+    },
+    video: {
       type: String,
-      required: true,
+    },
+    arModelUrl: {
+      type: String,
     },
     description: {
       type: String,
       required: true,
     },
+    pricingBreakdown: {
+      type: [Object],
+      default: [],
+    },
     price: {
       type: Number,
       required: true,
       default: 0,
+    },
+    gems: {
+      type: [String],
+      default: [],
     },
     countInStock: {
       type: Number,

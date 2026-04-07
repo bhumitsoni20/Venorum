@@ -4,15 +4,21 @@ import Product from '../models/Product';
 
 export const createProduct = async (req: AuthRequest, res: Response) => {
   try {
+    const { name, price, images, video, arModelUrl, description, pricingBreakdown, gems, category, countInStock } = req.body;
+    
     const product = new Product({
-      name: req.body.name || 'Sample name',
-      price: req.body.price || 0,
       user: req.user._id,
-      image: req.body.image || '/images/sample.jpg',
-      category: req.body.category,
-      countInStock: req.body.countInStock || 0,
+      name: name || 'Sample Piece',
+      price: price || 0,
+      images: images || [],
+      video: video || '',
+      arModelUrl: arModelUrl || '',
+      description: description || 'Legacy narrative.',
+      pricingBreakdown: pricingBreakdown || [],
+      gems: gems || [],
+      category,
+      countInStock: countInStock || 0,
       numReviews: 0,
-      description: req.body.description || 'Sample description',
     });
 
     const createdProduct = await product.save();
@@ -24,7 +30,7 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find({}).populate('category', 'name slug');
+    const products = await Product.find({}).populate('category', 'name mainCategory slug');
     res.json(products);
   } catch(error:any) {
       res.status(res.statusCode === 200 ? 500 : res.statusCode).json({ message: error.message });
@@ -33,7 +39,7 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name slug');
+    const product = await Product.findById(req.params.id).populate('category', 'name mainCategory slug');
 
     if (product) {
       res.json(product);
@@ -48,7 +54,7 @@ export const getProductById = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, price, description, image, category, countInStock } = req.body;
+    const { name, price, description, images, video, arModelUrl, pricingBreakdown, gems, category, countInStock } = req.body;
 
     const product = await Product.findById(req.params.id);
 
@@ -56,7 +62,11 @@ export const updateProduct = async (req: AuthRequest, res: Response) => {
       product.name = name || product.name;
       product.price = price || product.price;
       product.description = description || product.description;
-      product.image = image || product.image;
+      product.images = images || product.images;
+      product.video = video || product.video;
+      product.arModelUrl = arModelUrl || product.arModelUrl;
+      product.pricingBreakdown = pricingBreakdown || product.pricingBreakdown;
+      product.gems = gems || product.gems;
       product.category = category || product.category;
       product.countInStock = countInStock || product.countInStock;
 

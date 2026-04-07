@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Cart from "./pages/Cart";
 import Consultation from "./pages/Consultation";
 import Rates from "./pages/Rates";
+import ShopCategoryDetails from "./pages/ShopCategoryDetails";
 
 // Admin
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -40,6 +41,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/shop/:categorySlug" element={<ShopCategoryDetails />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />

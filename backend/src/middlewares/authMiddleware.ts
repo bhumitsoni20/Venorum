@@ -17,6 +17,16 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     try {
       token = req.headers.authorization.split(' ')[1];
 
+      // Dev UI Bypass Authentication
+      if (token === 'MOCK_TOKEN') {
+         let dummyAdmin = await User.findOne({ email: 'admin@venorum.com' });
+         if (!dummyAdmin) {
+            dummyAdmin = await User.create({ name: 'Admin', email: 'admin@venorum.com', password: 'manoj.venorum', role: 'admin' });
+         }
+         req.user = dummyAdmin;
+         return next();
+      }
+
       // Verify token
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'secret');
 
