@@ -4,7 +4,7 @@ import { Package, Users, ShoppingBag, TrendingUp, DollarSign } from "lucide-reac
 
 const Dashboard = () => {
   const stats = [
-    { title: "Total Revenue", value: "₹45.2M", icon: <DollarSign size={24} className="text-luxury-gold" />, trend: "+12.5%" },
+    { title: "Total Revenue", value: "₹456M", icon: <DollarSign size={24} className="text-luxury-gold" />, trend: "+12.5%" },
     { title: "Active Orders", value: "142", icon: <ShoppingBag size={24} className="text-luxury-gold" />, trend: "+5.2%" },
     { title: "Vault Members", value: "8,245", icon: <Users size={24} className="text-luxury-gold" />, trend: "+1.2%" },
     { title: "Products Minted", value: "314", icon: <Package size={24} className="text-luxury-gold" />, trend: "Steady" }

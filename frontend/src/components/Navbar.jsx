@@ -12,14 +12,43 @@ import {
   Package,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { auth } from "../firebase/firebaseConfig";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Simulated Auth State
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Real Auth State
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("venorum_auth_token"));
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Listen for Firebase auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true);
+        setCurrentUser(user);
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) { /* ignore */ }
+    localStorage.removeItem("venorum_auth_token");
+    localStorage.removeItem("venorum_user");
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    setProfileDropdownOpen(false);
+    navigate("/");
+  };
 
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -148,18 +177,21 @@ const Navbar = () => {
                         Sign In
                       </button>
                       <button
-                        onClick={() => setIsLoggedIn(true)}
-                        className="mt-4 text-[10px] text-gray-500 uppercase underline hover:text-luxury-gold"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          navigate("/login");
+                        }}
+                        className="w-full mt-3 border border-luxury-gold/40 text-luxury-gold py-2 uppercase tracking-widest text-xs font-medium hover:bg-luxury-gold hover:text-luxury-black transition-colors"
                       >
-                        (Simulate Log In)
+                        Sign Up
                       </button>
                     </div>
                   ) : (
                     <div className="py-2">
                       <div className="px-4 py-3 border-b border-luxury-gold/10 mb-2">
-                        <p className="text-sm font-serif">Eleanor Vance</p>
-                        <p className="text-xs text-luxury-gold tracking-wider">
-                          VIP Select
+                        <p className="text-sm font-serif">{currentUser?.displayName || "Venorum Member"}</p>
+                        <p className="text-xs text-luxury-gold tracking-wider truncate">
+                          {currentUser?.email || ""}
                         </p>
                       </div>
                       <Link
@@ -187,10 +219,7 @@ const Navbar = () => {
                         <span>Settings</span>
                       </Link>
                       <button
-                        onClick={() => {
-                          setIsLoggedIn(false);
-                          setProfileDropdownOpen(false);
-                        }}
+                        onClick={handleLogout}
                         className="w-full mt-2 border-t border-luxury-gold/10 flex items-center space-x-3 px-4 py-3 hover:bg-luxury-gray text-sm text-red-500 hover:text-red-400 transition-colors text-left"
                       >
                         <LogOut size={16} />
