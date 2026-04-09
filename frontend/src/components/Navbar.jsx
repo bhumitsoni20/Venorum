@@ -21,8 +21,12 @@ const Navbar = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   // Real Auth State
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("venorum_auth_token"));
-  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("venorum_user") || "null"));
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("venorum_auth_token"),
+  );
+  const [currentUser, setCurrentUser] = useState(
+    JSON.parse(localStorage.getItem("venorum_user") || "null"),
+  );
 
   // Listen for login/logout across the app
   useEffect(() => {
@@ -38,7 +42,7 @@ const Navbar = () => {
 
     // Listen for storage changes (for multiple tabs)
     window.addEventListener("storage", syncAuth);
-    
+
     // Custom event for same-tab updates
     window.addEventListener("venorum-auth-change", syncAuth);
 
@@ -47,12 +51,12 @@ const Navbar = () => {
       if (user) {
         // If it's a firebase user, ensure we have him in state if not already there
         if (!localStorage.getItem("venorum_auth_token")) {
-           setIsLoggedIn(true);
-           setCurrentUser({
-             name: user.displayName || "Venorum Member",
-             email: user.email,
-             role: 'user'
-           });
+          setIsLoggedIn(true);
+          setCurrentUser({
+            name: user.displayName || "Venorum Member",
+            email: user.email,
+            role: "user",
+          });
         }
       } else {
         // Only log out if there isn't a custom token (like admin)
@@ -73,16 +77,18 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     localStorage.removeItem("venorum_auth_token");
     localStorage.removeItem("venorum_user");
     setIsLoggedIn(false);
     setCurrentUser(null);
     setProfileDropdownOpen(false);
-    
+
     // Notify same-tab listeners
     window.dispatchEvent(new Event("venorum-auth-change"));
-    
+
     navigate("/");
   };
 
@@ -97,14 +103,17 @@ const Navbar = () => {
     }
     try {
       const res = await fetch("http://localhost:5000/api/cart", {
-        headers: { "Authorization": `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        const totalItems = data.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+        const totalItems =
+          data.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
         setCartCount(totalItems);
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   };
 
   useEffect(() => {
@@ -265,20 +274,26 @@ const Navbar = () => {
                   ) : (
                     <div className="py-2">
                       <div className="px-4 py-3 border-b border-luxury-gold/10 mb-2">
-                        <p className="text-sm font-serif">{currentUser?.name || currentUser?.displayName || "Venorum Member"}</p>
+                        <p className="text-sm font-serif">
+                          {currentUser?.name ||
+                            currentUser?.displayName ||
+                            "Venorum Member"}
+                        </p>
                         <p className="text-xs text-luxury-gold tracking-wider truncate">
                           {currentUser?.email || ""}
                         </p>
                       </div>
 
-                      {currentUser?.role === 'admin' && (
+                      {currentUser?.role === "admin" && (
                         <Link
                           to="/admin"
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center space-x-3 px-4 py-3 bg-luxury-gold/5 hover:bg-luxury-gold/10 text-sm text-luxury-gold transition-colors font-medium border-b border-luxury-gold/10"
                         >
                           <Settings size={16} />
-                          <span className="uppercase tracking-widest text-[10px]">Admin Dashboard</span>
+                          <span className="uppercase tracking-widest text-[10px]">
+                            Admin Dashboard
+                          </span>
                         </Link>
                       )}
                       <Link

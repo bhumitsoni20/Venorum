@@ -66,6 +66,37 @@ const ProductDetail = () => {
     }
   };
 
+  const handleAddToWishlist = async () => {
+    const token = localStorage.getItem("venorum_auth_token");
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/wishlist/${id}`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (res.ok) {
+        setMessage("Masterpiece added to your curated collection.");
+      } else {
+        const data = await res.json();
+        // If already in wishlist, let's just say it's there
+        if (data.message === 'Product already in wishlist') {
+            setMessage("This masterpiece is already in your collection.");
+        } else {
+            throw new Error(data.message || "Failed to add to wishlist");
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <RefreshCw className="animate-spin text-luxury-gold" size={32} />
@@ -116,7 +147,13 @@ const ProductDetail = () => {
 
         {/* Product Details */}
         <div className="flex flex-col justify-center">
-           {message && <p className="bg-luxury-gold/10 text-luxury-gold p-3 mb-6 text-xs uppercase tracking-widest border border-luxury-gold/20">{message}</p>}
+           {(message || error) && (
+              <p className={`p-4 mb-8 text-[10px] uppercase tracking-[0.2em] border ${
+                error ? 'bg-red-900/10 text-red-500 border-red-500/20' : 'bg-luxury-gold/10 text-luxury-gold border-luxury-gold/20'
+              }`}>
+                {message || error}
+              </p>
+           )}
            
            <motion.p 
              initial={{ opacity: 0, y: 20 }}
@@ -164,12 +201,20 @@ const ProductDetail = () => {
               <button 
                 onClick={handleAddToCart}
                 disabled={cartLoading}
-                className="flex-grow bg-luxury-gold text-luxury-black hover:bg-luxury-white transition-colors py-4 uppercase tracking-widest text-sm font-medium flex items-center justify-center gap-2"
+                className="flex-grow bg-luxury-gold text-luxury-black hover:bg-luxury-white transition-all duration-300 py-4 uppercase tracking-[0.2em] text-[10px] font-bold flex items-center justify-center gap-3 shadow-lg shadow-luxury-gold/10"
               >
-                {cartLoading ? <RefreshCw className="animate-spin" size={16} /> : "Add to Cart"}
+                {cartLoading ? <RefreshCw className="animate-spin" size={16} /> : (
+                   <>
+                      <ShoppingBag size={14} />
+                      <span>Acquire Piece</span>
+                   </>
+                )}
               </button>
-              <button className="p-4 border border-luxury-gold/20 hover:border-luxury-gold text-luxury-gold transition-colors flex items-center justify-center">
-                 <Heart size={20} />
+              <button 
+                onClick={handleAddToWishlist}
+                className="w-16 border border-luxury-gold/20 hover:border-luxury-gold text-luxury-gold hover:bg-luxury-gold/5 transition-all duration-300 flex items-center justify-center group"
+              >
+                 <Heart size={20} className="group-hover:fill-luxury-gold transition-colors duration-300" />
               </button>
            </motion.div>
 
