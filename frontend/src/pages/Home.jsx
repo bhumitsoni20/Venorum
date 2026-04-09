@@ -421,28 +421,33 @@ const Home = () => {
             {[
               {
                 title: "Jewelry for Women",
+                slug: "womens",
                 img: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=600&auto=format&fit=crop",
               },
               {
                 title: "Jewelry for Men",
+                slug: "mens",
                 img: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=600&auto=format&fit=crop",
               },
               {
                 title: "Jewelry for Kids",
+                slug: "kids",
                 img: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop",
               },
             ].map((cat, i) => (
-              <div
+              <Link
                 key={i}
-                ref={addToCardsRef}
-                className="group relative h-[450px] overflow-hidden rounded-sm cursor-pointer border border-transparent hover:border-luxury-gold/50 transition-all duration-700 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]"
+                to={`/shop/${cat.slug}`}
+                className="group relative h-[450px] block overflow-hidden rounded-sm cursor-pointer border border-transparent hover:border-luxury-gold/50 transition-all duration-700 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]"
               >
-                <img
-                  src={cat.img}
-                  alt={cat.title}
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70 group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/60 to-transparent flex items-end p-8">
+                <div className="absolute inset-0 z-0">
+                  <img
+                    src={cat.img}
+                    alt={cat.title}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-70 group-hover:opacity-100"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-luxury-black via-luxury-black/60 to-transparent flex items-end p-8 z-10">
                   <div className="w-full flex justify-between items-center text-luxury-white group-hover:text-luxury-gold transition-colors">
                     <h3 className="font-serif text-2xl drop-shadow-md">{cat.title}</h3>
                     <ArrowRight
@@ -451,7 +456,7 @@ const Home = () => {
                     />
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
