@@ -86,6 +86,37 @@ const Navbar = () => {
     navigate("/");
   };
 
+  // Cart State
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = async () => {
+    const token = localStorage.getItem("venorum_auth_token");
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/api/cart", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const totalItems = data.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+        setCartCount(totalItems);
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  useEffect(() => {
+    fetchCartCount();
+    window.addEventListener("venorum-cart-change", fetchCartCount);
+    window.addEventListener("venorum-auth-change", fetchCartCount);
+    return () => {
+      window.removeEventListener("venorum-cart-change", fetchCartCount);
+      window.removeEventListener("venorum-auth-change", fetchCartCount);
+    };
+  }, []);
+
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -167,13 +198,22 @@ const Navbar = () => {
           </button>
 
           <Link
+            to="/wishlist"
+            className="text-gray-300 hover:text-luxury-gold transition-all duration-500 hover:scale-110 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]"
+          >
+            <Heart size={20} strokeWidth={1.5} />
+          </Link>
+
+          <Link
             to="/cart"
             className="text-gray-300 hover:text-luxury-gold transition-all duration-500 hover:scale-110 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] relative block"
           >
             <ShoppingBag size={20} strokeWidth={1.5} />
-            <span className="absolute -top-2 -right-2 bg-luxury-gold text-luxury-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center pointer-events-none">
-              2
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-luxury-gold text-luxury-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center pointer-events-none">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           <div className="relative hidden md:block" ref={dropdownRef}>

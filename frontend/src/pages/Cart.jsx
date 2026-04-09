@@ -1,47 +1,143 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Trash2, Plus, Minus, ArrowRight, RefreshCw } from "lucide-react";
+
+const API_URL = "http://localhost:5000/api";
 
 const Cart = () => {
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      name: "The Aurelia Ring",
-      price: 345000,
-      quantity: 1,
-      img: "https://images.unsplash.com/photo-1605100804763-247f66156ce4?q=80&w=200&auto=format&fit=crop",
-    },
-    {
-      id: 2,
-      name: "Eternity Pendant",
-      price: 235000,
-      quantity: 1,
-      img: "https://images.unsplash.com/photo-1599643477874-c4a6a4218a5c?q=80&w=200&auto=format&fit=crop",
-    },
-  ]);
+  const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const updateQuantity = (id, delta) => {
-    setItems(
-      items.map((item) => {
-        if (item.id === id) {
-          const newQ = item.quantity + delta;
-          return { ...item, quantity: newQ > 0 ? newQ : 1 };
-        }
-        return item;
-      }),
-    );
+  const fetchCart = async () => {
+    const token = localStorage.getItem("venorum_auth_token");
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/cart`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Could not fetch cart");
+      const data = await res.json();
+      // data.items will have [{product: {...}, quantity: N}]
+      setItems(data.items || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeItem = (id) => {
-    setItems(items.filter((item) => item.id !== id));
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const updateQuantity = async (productId, currentQ, delta) => {
+    const newQ = currentQ + delta;
+    if (newQ < 1) return;
+
+    const token = localStorage.getItem("venorum_auth_token");
+    try {
+      const res = await fetch(`${API_URL}/cart/${productId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ quantity: newQ })
+      });
+      if (res.ok) {
+        setItems(items.map(item => 
+          item.product._id === productId ? { ...item, quantity: newQ } : item
+        ));
+      }
+    } catch (err) {
+      console.error("Update failed", err);
+    }
+  };
+
+  const removeItem = async (productId) => {
+    const token = localStorage.getItem("venorum_auth_token");
+    try {
+      const res = await fetch(`${API_URL}/cart/${productId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setItems(items.filter(item => item.product._id !== productId));
+      }
+    } catch (err) {
+      console.error("Removal failed", err);
+    }
   };
 
   const subtotal = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (item.product?.price || 0) * item.quantity,
     0,
   );
   const shipping = subtotal > 0 ? 500 : 0;
+
+  const handleCheckout = async () => {
+    const token = localStorage.getItem("venorum_auth_token");
+    if (!token || items.length === 0) return;
+
+    setLoading(true);
+    try {
+      const orderData = {
+        orderItems: items.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          image: item.product.images[0],
+          price: item.product.price,
+          product: item.product._id
+        })),
+        shippingAddress: {
+          address: "123 Royale Estate",
+          city: "London",
+          postalCode: "W1J 7JZ",
+          country: "United Kingdom"
+        },
+        paymentMethod: "Credit Card",
+        itemsPrice: subtotal,
+        taxPrice: 0,
+        shippingPrice: shipping,
+        totalPrice: subtotal + shipping
+      };
+
+      const res = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      if (res.ok) {
+        // Success! Cart is cleared on backend. 
+        // Notify Navbar
+        window.dispatchEvent(new Event("venorum-cart-change"));
+        navigate('/profile');
+      } else {
+        const data = await res.json();
+        throw new Error(data.message || "Checkout failed");
+      }
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <RefreshCw className="animate-spin text-luxury-gold" size={32} />
+    </div>
+  );
 
   return (
     <motion.div
@@ -51,6 +147,8 @@ const Cart = () => {
       className="min-h-screen pt-32 pb-20 container mx-auto px-6"
     >
       <h1 className="text-4xl md:text-5xl font-serif mb-12">Shopping Bag</h1>
+
+      {error && <p className="text-red-500 mb-6 text-sm uppercase tracking-widest">{error}</p>}
 
       {items.length === 0 ? (
         <div className="text-center py-20 border border-luxury-gold/20  glass ">
@@ -70,7 +168,7 @@ const Cart = () => {
             <AnimatePresence>
               {items.map((item) => (
                 <motion.div
-                  key={item.id}
+                  key={item.product?._id}
                   layout
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -80,18 +178,18 @@ const Cart = () => {
                   <div className="flex items-center gap-6">
                     <div className="w-24 h-24 bg-luxury-gray">
                       <img
-                        src={item.img}
-                        alt={item.name}
+                        src={item.product?.images?.[0] || "https://via.placeholder.com/200"}
+                        alt={item.product?.name}
                         className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
                       />
                     </div>
                     <div>
-                      <h3 className="font-serif text-xl mb-1">{item.name}</h3>
+                      <h3 className="font-serif text-xl mb-1">{item.product?.name}</h3>
                       <p className="text-sm text-gray-400 tracking-wider">
-                        SKU: VN-{item.id}089
+                        SKU: VN-{item.product?._id?.substring(0,6)}
                       </p>
                       <p className="text-luxury-gold mt-2 block sm:hidden">
-                        ₹{item.price.toLocaleString("en-IN")}
+                        ₹{(item.product?.price || 0).toLocaleString("en-IN")}
                       </p>
                     </div>
                   </div>
@@ -99,7 +197,7 @@ const Cart = () => {
                   <div className="flex items-center justify-between sm:w-1/2">
                     <div className="flex items-center space-x-4  glass  px-4 py-2 border border-luxury-gold/20">
                       <button
-                        onClick={() => updateQuantity(item.id, -1)}
+                        onClick={() => updateQuantity(item.product._id, item.quantity, -1)}
                         className="text-gray-400 hover:text-luxury-white transition-colors"
                       >
                         <Minus size={14} />
@@ -108,17 +206,17 @@ const Cart = () => {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item.id, 1)}
+                        onClick={() => updateQuantity(item.product._id, item.quantity, 1)}
                         className="text-gray-400 hover:text-luxury-white transition-colors"
                       >
                         <Plus size={14} />
                       </button>
                     </div>
                     <p className="text-luxury-white font-medium hidden sm:block">
-                      ₹{(item.price * item.quantity).toLocaleString("en-IN")}
+                      ₹{((item.product?.price || 0) * item.quantity).toLocaleString("en-IN")}
                     </p>
                     <button
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.product._id)}
                       className="text-gray-400 hover:text-red-500 transition-colors ml-4"
                     >
                       <Trash2 size={18} />
@@ -160,7 +258,10 @@ const Cart = () => {
                   ₹{(subtotal + shipping).toLocaleString("en-IN")}
                 </span>
               </div>
-              <button className="w-full bg-luxury-gold text-luxury-black flex items-center justify-center space-x-2 py-4 hover:bg-luxury-white transition-colors uppercase tracking-widest text-xs font-semibold">
+              <button 
+                onClick={handleCheckout}
+                className="w-full bg-luxury-gold text-luxury-black flex items-center justify-center space-x-2 py-4 hover:bg-luxury-white transition-colors uppercase tracking-widest text-xs font-semibold"
+              >
                 <span>Secure Checkout</span>
                 <ArrowRight size={16} />
               </button>
@@ -173,3 +274,5 @@ const Cart = () => {
 };
 
 export default Cart;
+
+

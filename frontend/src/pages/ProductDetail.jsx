@@ -1,22 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Truck, RotateCcw, Heart } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, Truck, RotateCcw, Heart, RefreshCw } from 'lucide-react';
+
+const API_URL = "http://localhost:5000/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [cartLoading, setCartLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState("");
 
-  // Placeholder static data
-  const product = {
-    name: 'The Aurelia Ring',
-    price: '₹3,45,000',
-    description: 'A masterpiece of modern craftsmanship, the Aurelia Ring features a flawless 2-carat center diamond embraced by an interlocking band of 18k solid gold. Perfect for those who desire understated elegance with a commanding presence.',
-    story: 'Inspired by the celestial movements and the golden hour, Aurelia was forged for the modern goddess. It takes our master jewelers 120 hours to set and polish the delicate facets.',
-    images: [
-      'https://images.unsplash.com/photo-1605100804763-247f66156ce4?q=80&w=1000&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1599643478514-411bd0adddd1?q=80&w=1000&auto=format&fit=crop'
-    ]
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`${API_URL}/products/${id}`);
+        if (!res.ok) throw new Error("Product not found");
+        const data = await res.json();
+        setProduct(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("venorum_auth_token");
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setCartLoading(true);
+    setMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId: id, quantity: 1 })
+      });
+
+      if (res.ok) {
+        setMessage("Item added to your shopping bag.");
+        // Notify Navbar to update count
+        window.dispatchEvent(new Event("venorum-cart-change"));
+      } else {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to add to cart");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCartLoading(false);
+    }
   };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <RefreshCw className="animate-spin text-luxury-gold" size={32} />
+    </div>
+  );
+
+  if (error && !product) return (
+    <div className="min-h-screen pt-32 text-center">
+      <h2 className="text-2xl font-serif text-red-500">Error: {error}</h2>
+      <Link to="/shop" className="text-luxury-gold underline mt-4 inline-block">Back to Shop</Link>
+    </div>
+  );
 
   return (
     <motion.div 
@@ -35,12 +96,14 @@ const ProductDetail = () => {
              transition={{ duration: 0.8 }}
              className="w-full h-[600px] bg-luxury-gray rounded-sm overflow-hidden"
            >
-              <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+              <img src={product.images[0] || 'https://via.placeholder.com/600'} alt={product.name} className="w-full h-full object-cover" />
            </motion.div>
            <div className="grid grid-cols-2 gap-6">
-              <div className="h-[300px] bg-luxury-gray rounded-sm overflow-hidden">
-                 <img src={product.images[1]} alt={product.name} className="w-full h-full object-cover" />
-              </div>
+              {product.images[1] && (
+                <div className="h-[300px] bg-luxury-gray rounded-sm overflow-hidden">
+                   <img src={product.images[1]} alt={product.name} className="w-full h-full object-cover" />
+                </div>
+              )}
               <div className="h-[300px] bg-luxury-gray rounded-sm flex items-center justify-center p-8 text-center border border-luxury-gold/20 relative overflow-hidden group cursor-pointer">
                  <div className="absolute inset-0 bg-luxury-gold/5 group-hover:bg-luxury-gold/10 transition-colors"></div>
                  <div>
@@ -53,13 +116,15 @@ const ProductDetail = () => {
 
         {/* Product Details */}
         <div className="flex flex-col justify-center">
+           {message && <p className="bg-luxury-gold/10 text-luxury-gold p-3 mb-6 text-xs uppercase tracking-widest border border-luxury-gold/20">{message}</p>}
+           
            <motion.p 
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: 0.2 }}
              className="text-luxury-gold tracking-[0.3em] text-xs uppercase mb-4"
            >
-             Bridal Collection
+             Venorum Masterpiece
            </motion.p>
            
            <motion.h1 
@@ -77,7 +142,7 @@ const ProductDetail = () => {
              transition={{ delay: 0.4 }}
              className="text-2xl text-gray-400 font-light tracking-wide mb-8"
            >
-             {product.price}
+             ₹{product.price.toLocaleString("en-IN")}
            </motion.p>
            
            <motion.div 
@@ -87,42 +152,6 @@ const ProductDetail = () => {
              className="space-y-6 mb-10"
            >
              <p className="text-gray-400 leading-relaxed font-light">{product.description}</p>
-             <div className="pt-4 border-t border-luxury-gold/10">
-                <h4 className="font-serif text-lg mb-2">The Story</h4>
-                <p className="text-gray-400 text-sm leading-relaxed font-light">{product.story}</p>
-             </div>
-           </motion.div>
-
-           {/* Customization Options */}
-           <motion.div 
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ delay: 0.6 }}
-             className="mb-10 space-y-4"
-           >
-              <div>
-                 <span className="block text-sm text-gray-400 mb-2">Material</span>
-                 <div className="flex space-x-4">
-                    <button className="w-8 h-8 rounded-full bg-[#E5D7B7] border-2 border-luxury-white ring-2 ring-offset-2 ring-offset-luxury-black ring-[#E5D7B7]"></button>
-                    <button className="w-8 h-8 rounded-full bg-[#f3e5ab] border border-transparent"></button>
-                    <button className="w-8 h-8 rounded-full bg-[#EAE2D6] border border-transparent"></button>
-                 </div>
-              </div>
-              
-              <div className="pt-4">
-                 <div className="flex justify-between items-end mb-2">
-                    <span className="block text-sm text-gray-400">Ring Size</span>
-                    <span className="text-xs text-luxury-gold underline cursor-pointer hover:text-luxury-white transition-colors">Size Guide</span>
-                 </div>
-                 <select className="w-full bg-luxury-gray border border-luxury-gold/20 text-sm py-4 px-6 focus:outline-none focus:border-luxury-gold text-luxury-white">
-                   <option>Select Size (US)</option>
-                   <option>5.0</option>
-                   <option>5.5</option>
-                   <option>6.0</option>
-                   <option>6.5</option>
-                   <option>7.0</option>
-                 </select>
-              </div>
            </motion.div>
 
            {/* Actions */}
@@ -132,7 +161,13 @@ const ProductDetail = () => {
              transition={{ delay: 0.7 }}
              className="flex space-x-4 mb-12"
            >
-              <button className="flex-grow bg-luxury-gold text-luxury-black hover:bg-luxury-white transition-colors py-4 uppercase tracking-widest text-sm font-medium">Add to Cart</button>
+              <button 
+                onClick={handleAddToCart}
+                disabled={cartLoading}
+                className="flex-grow bg-luxury-gold text-luxury-black hover:bg-luxury-white transition-colors py-4 uppercase tracking-widest text-sm font-medium flex items-center justify-center gap-2"
+              >
+                {cartLoading ? <RefreshCw className="animate-spin" size={16} /> : "Add to Cart"}
+              </button>
               <button className="p-4 border border-luxury-gold/20 hover:border-luxury-gold text-luxury-gold transition-colors flex items-center justify-center">
                  <Heart size={20} />
               </button>
