@@ -1,27 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, RefreshCw, CheckCircle, User } from "lucide-react";
+import { Mail, Lock, RefreshCw, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { 
   auth, 
   googleProvider, 
   signInWithPopup, 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from "../firebase/firebaseConfig";
 
 const API_URL = "http://localhost:5000/api";
 
 const Login = () => {
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("venorum_auth_token");
+    const user = localStorage.getItem("venorum_user");
+    if (token && user) {
+        navigate('/');
+    }
+  }, [navigate]);
   
   const [isLogin, setIsLogin] = useState(true); 
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   
   // FORM FIELDS
   const [name, setName] = useState("");
   const [emailStr, setEmailStr] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,6 +52,10 @@ const Login = () => {
            const userData = await res.json();
            localStorage.setItem("venorum_auth_token", firebaseIdToken);
            localStorage.setItem("venorum_user", JSON.stringify(userData));
+           
+           // Notify Navbar to update
+           window.dispatchEvent(new Event("venorum-auth-change"));
+           
            navigate('/'); 
        } else {
            const errData = await res.json();
@@ -49,6 +65,32 @@ const Login = () => {
          setError(err?.message || "Failed to connect to server.");
          setLoading(false);
      }
+  };
+
+  // --- TRY ADMIN LOGIN FIRST (backend email/password) ---
+  const tryAdminLogin = async (email, pwd) => {
+    try {
+      const res = await fetch(`${API_URL}/auth/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: pwd })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("venorum_auth_token", data.token);
+        localStorage.setItem("venorum_user", JSON.stringify(data));
+        
+        // Notify Navbar to update
+        window.dispatchEvent(new Event("venorum-auth-change"));
+        
+        navigate('/');
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   };
 
   // --- EMAIL/PASSWORD SUBMIT ---
@@ -69,22 +111,31 @@ const Login = () => {
       setLoading(true); setError(""); setMessage("");
       
       try {
-          let userCredential;
-          
           if (!isLogin) {
-              // SIGN UP
-              userCredential = await createUserWithEmailAndPassword(auth, emailStr, password);
-              // Send email verification
-              await sendEmailVerification(userCredential.user);
-              setMessage("Account created! A verification email has been sent to your inbox.");
-              // Sync with backend
-              const token = await userCredential.user.getIdToken(true);
-              await syncWithBackend(token);
+              // SIGN UP — Custom Backend Register (Professional Email)
+              const res = await fetch(`${API_URL}/auth/register`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ name, email: emailStr, password })
+              });
+
+              const data = await res.json();
+              if (res.ok) {
+                  setMessage(data.message);
+                  // We don't log them in yet; they must verify via email first
+                  setIsLogin(true); // Switch to login view
+              } else {
+                  throw new Error(data.message || "Registration failed.");
+              }
           } else {
-              // SIGN IN
-              userCredential = await signInWithEmailAndPassword(auth, emailStr, password);
-              const token = await userCredential.user.getIdToken(true);
-              await syncWithBackend(token);
+              // SIGN IN — try admin login first, then Firebase
+              const isAdmin = await tryAdminLogin(emailStr, password);
+              if (!isAdmin) {
+                  // Not admin credentials — try Firebase auth
+                  const userCredential = await signInWithEmailAndPassword(auth, emailStr, password);
+                  const token = await userCredential.user.getIdToken(true);
+                  await syncWithBackend(token);
+              }
           }
       } catch(err) {
           const code = err?.code || "";
@@ -103,6 +154,36 @@ const Login = () => {
           }
           setLoading(false);
       }
+  };
+
+  // --- FORGOT PASSWORD ---
+  const handleForgotPassword = async () => {
+    if (!emailStr) {
+      setError("Please enter your email address.");
+      return;
+    }
+    
+    setLoading(true); setError(""); setMessage("");
+
+    try {
+      const res = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailStr })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage(data.message);
+      } else {
+        throw new Error(data.message || "Failed to send reset email.");
+      }
+      setLoading(false);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+      setLoading(false);
+    }
   };
 
   // --- GOOGLE SIGN-IN ---
@@ -134,7 +215,7 @@ const Login = () => {
          <div className="text-center mb-8">
             <h1 className="text-3xl font-serif text-luxury-gold mb-2 tracking-widest uppercase">Venorum</h1>
             <p className="text-gray-400 text-xs font-light uppercase tracking-widest">
-               {isLogin ? "Welcome Back" : "Create Your Account"}
+               {isForgotPassword ? "Reset Your Password" : (isLogin ? "Welcome Back" : "Create Your Account")}
             </p>
          </div>
 
@@ -151,6 +232,45 @@ const Login = () => {
          )}
 
          <AnimatePresence mode="wait">
+           {/* ========== FORGOT PASSWORD VIEW ========== */}
+           {isForgotPassword ? (
+             <motion.div key="forgot" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
+               
+               {/* EMAIL */}
+               <div className="relative">
+                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                   <input 
+                     type="email" 
+                     value={emailStr} 
+                     onChange={e => setEmailStr(e.target.value)} 
+                     className="w-full bg-luxury-black/50 border border-luxury-gold/30 focus:border-luxury-gold rounded-sm px-12 py-3 text-white text-sm outline-none transition-colors" 
+                     placeholder="Email Address" 
+                   />
+               </div>
+
+               {/* RESET BUTTON */}
+               <button 
+                 onClick={handleForgotPassword} 
+                 disabled={loading} 
+                 className="w-full flex items-center justify-center gap-3 bg-luxury-gold text-luxury-black font-bold uppercase tracking-widest px-6 py-4 rounded-sm transition-all hover:bg-luxury-white shadow-[0_0_20px_rgba(212,175,55,0.2)] disabled:opacity-50 mt-2"
+               >
+                  {loading ? <RefreshCw className="animate-spin" size={18} /> : <span>Send Reset Link</span>}
+               </button>
+
+               {/* BACK TO LOGIN */}
+               <div className="flex justify-center mt-4 pt-2">
+                 <button 
+                   onClick={() => { setIsForgotPassword(false); setError(""); setMessage(""); }} 
+                   className="flex items-center gap-2 text-gray-400 hover:text-luxury-gold transition-colors text-xs uppercase tracking-[0.1em] font-medium"
+                 >
+                    <ArrowLeft size={14} />
+                    <span>Back to Sign In</span>
+                 </button>
+               </div>
+             </motion.div>
+
+           ) : (
+             /* ========== LOGIN / SIGNUP VIEW ========== */
              <motion.div key={isLogin ? "login" : "signup"} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-5">
                 
                 {/* NAME FIELD — only on Sign Up */}
@@ -167,11 +287,38 @@ const Login = () => {
                     <input type="email" value={emailStr} onChange={e => setEmailStr(e.target.value)} className="w-full bg-luxury-black/50 border border-luxury-gold/30 focus:border-luxury-gold rounded-sm px-12 py-3 text-white text-sm outline-none transition-colors" placeholder="Email Address" />
                 </div>
 
-                {/* PASSWORD */}
+                {/* PASSWORD with Eye Toggle */}
                 <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 z-10" size={16} />
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-luxury-black/50 border border-luxury-gold/30 focus:border-luxury-gold rounded-sm px-12 py-3 text-white text-sm outline-none transition-colors" placeholder="Password" />
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      value={password} 
+                      onChange={e => setPassword(e.target.value)} 
+                      className="w-full bg-luxury-black/50 border border-luxury-gold/30 focus:border-luxury-gold rounded-sm pl-12 pr-12 py-3 text-white text-sm outline-none transition-colors" 
+                      placeholder="Password" 
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-luxury-gold transition-colors z-10 focus:outline-none"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                 </div>
+
+                {/* FORGOT PASSWORD LINK — only on Login */}
+                {isLogin && (
+                  <div className="flex justify-end -mt-2">
+                    <button 
+                      onClick={() => { setIsForgotPassword(true); setError(""); setMessage(""); }}
+                      className="text-gray-400 hover:text-luxury-gold transition-colors text-[11px] uppercase tracking-[0.08em] font-medium"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                )}
 
                 {/* SUBMIT BUTTON */}
                 <button onClick={handleSubmit} disabled={loading} className="w-full flex items-center justify-center gap-3 bg-luxury-gold text-luxury-black font-bold uppercase tracking-widest px-6 py-4 rounded-sm transition-all hover:bg-luxury-white shadow-[0_0_20px_rgba(212,175,55,0.2)] disabled:opacity-50 mt-2">
@@ -201,6 +348,7 @@ const Login = () => {
                    <span>Continue with Google</span>
                 </button>
              </motion.div>
+           )}
          </AnimatePresence>
       </motion.div>
     </motion.div>

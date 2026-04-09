@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as admin from 'firebase-admin';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
 
 export interface AuthRequest extends Request {
@@ -26,10 +27,22 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
          return next();
       }
 
-      // 1. Verify token strictly using Firebase servers
+      // Try JWT verification first (for admin login tokens)
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { id: string };
+        const user = await User.findById(decoded.id);
+        if (user) {
+          req.user = user;
+          return next();
+        }
+      } catch (jwtError) {
+        // Not a valid JWT — fall through to Firebase verification
+      }
+
+      // Fallback: Verify token using Firebase servers
       const decodedToken = await admin.auth().verifyIdToken(token);
 
-      // 2. Resolve mapped user object exclusively from mapped Firebase parameter
+      // Resolve mapped user object exclusively from mapped Firebase parameter
       req.user = await User.findOne({ firebaseUid: decodedToken.uid });
 
       if (!req.user) {
@@ -48,3 +61,4 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     next(new Error('Not authorized, explicit payload token absent.'));
   }
 };
+

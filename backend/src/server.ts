@@ -4,9 +4,12 @@ dotenv.config();
 import app from './app';
 import { connectDB } from './config/database';
 import logger from './utils/logger';
+import { seedAdmin } from './utils/seedAdmin';
 
-// Connect to database
-connectDB();
+// Connect to database and seed admin
+connectDB().then(() => {
+  seedAdmin();
+});
 
 const PORT = process.env.PORT || 5000;
 

@@ -24,7 +24,8 @@ import {
   signInWithPopup, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from "firebase/auth";
 
 export const auth = getAuth(app);
@@ -34,5 +35,6 @@ export {
   signInWithPopup, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  sendEmailVerification
-};
+  sendEmailVerification,
+  sendPasswordResetEmail
+};  

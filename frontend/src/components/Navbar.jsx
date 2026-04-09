@@ -22,20 +22,52 @@ const Navbar = () => {
 
   // Real Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("venorum_auth_token"));
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("venorum_user") || "null"));
 
-  // Listen for Firebase auth state changes
+  // Listen for login/logout across the app
   useEffect(() => {
+    const syncAuth = () => {
+      const token = localStorage.getItem("venorum_auth_token");
+      const user = JSON.parse(localStorage.getItem("venorum_user") || "null");
+      setIsLoggedIn(!!token);
+      setCurrentUser(user);
+    };
+
+    // Initial sync
+    syncAuth();
+
+    // Listen for storage changes (for multiple tabs)
+    window.addEventListener("storage", syncAuth);
+    
+    // Custom event for same-tab updates
+    window.addEventListener("venorum-auth-change", syncAuth);
+
+    // Also listen for Firebase auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setIsLoggedIn(true);
-        setCurrentUser(user);
+        // If it's a firebase user, ensure we have him in state if not already there
+        if (!localStorage.getItem("venorum_auth_token")) {
+           setIsLoggedIn(true);
+           setCurrentUser({
+             name: user.displayName || "Venorum Member",
+             email: user.email,
+             role: 'user'
+           });
+        }
       } else {
-        setIsLoggedIn(false);
-        setCurrentUser(null);
+        // Only log out if there isn't a custom token (like admin)
+        if (!localStorage.getItem("venorum_auth_token")) {
+          setIsLoggedIn(false);
+          setCurrentUser(null);
+        }
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("venorum-auth-change", syncAuth);
+      unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -47,6 +79,10 @@ const Navbar = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setProfileDropdownOpen(false);
+    
+    // Notify same-tab listeners
+    window.dispatchEvent(new Event("venorum-auth-change"));
+    
     navigate("/");
   };
 
@@ -189,11 +225,22 @@ const Navbar = () => {
                   ) : (
                     <div className="py-2">
                       <div className="px-4 py-3 border-b border-luxury-gold/10 mb-2">
-                        <p className="text-sm font-serif">{currentUser?.displayName || "Venorum Member"}</p>
+                        <p className="text-sm font-serif">{currentUser?.name || currentUser?.displayName || "Venorum Member"}</p>
                         <p className="text-xs text-luxury-gold tracking-wider truncate">
                           {currentUser?.email || ""}
                         </p>
                       </div>
+
+                      {currentUser?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-3 bg-luxury-gold/5 hover:bg-luxury-gold/10 text-sm text-luxury-gold transition-colors font-medium border-b border-luxury-gold/10"
+                        >
+                          <Settings size={16} />
+                          <span className="uppercase tracking-widest text-[10px]">Admin Dashboard</span>
+                        </Link>
+                      )}
                       <Link
                         to="/profile"
                         onClick={() => setProfileDropdownOpen(false)}

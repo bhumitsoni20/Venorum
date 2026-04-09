@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import Profile from "./pages/Profile";
 import Cart from "./pages/Cart";
 import Consultation from "./pages/Consultation";
@@ -44,11 +46,15 @@ function App() {
           <Route path="/shop/:categorySlug" element={<ShopCategoryDetails />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/consultation" element={<Consultation />} />
           <Route path="/rates" element={<Rates />} />
         </Route>
+
+
 
         {/* Secure Admin Area */}
         <Route path="/admin" element={<AdminLayout />}>
