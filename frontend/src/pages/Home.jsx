@@ -8,8 +8,26 @@ import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const API_URL = "http://localhost:5000/api";
+
 const Home = () => {
   const mainRef = useRef(null);
+
+  // Live rates state
+  const [liveRates, setLiveRates] = useState(null);
+
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch(`${API_URL}/rates/bikaner`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) setLiveRates(json.data);
+        }
+      } catch (e) { /* silent fail on homepage */ }
+    };
+    fetchRates();
+  }, []);
 
   // Section 1 Refs
   const sec1Ref = useRef(null);
@@ -534,14 +552,32 @@ const Home = () => {
               <div className="flex flex-col md:flex-row gap-6 md:gap-12 text-center md:text-left">
                 <div>
                   <p className="text-gray-400 text-xs tracking-widest uppercase mb-1">Gold (24K)</p>
-                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">₹74,500 <span className="text-xs text-luxury-gold/60 font-sans font-light">/ 10g</span></p>
+                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">
+                    {liveRates?.gold?.["24k"] ? `₹${Number(liveRates.gold["24k"]).toLocaleString("en-IN")}` : "Loading..."}
+                    <span className="text-xs text-luxury-gold/60 font-sans font-light"> / gram</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs tracking-widest uppercase mb-1">Gold (22K)</p>
+                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">
+                    {liveRates?.gold?.["22k"] ? `₹${Number(liveRates.gold["22k"]).toLocaleString("en-IN")}` : "Loading..."}
+                    <span className="text-xs text-luxury-gold/60 font-sans font-light"> / gram</span>
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-xs tracking-widest uppercase mb-1">Silver</p>
-                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">₹85,200 <span className="text-xs text-luxury-gold/60 font-sans font-light">/ kg</span></p>
+                  <p className="text-xl font-serif text-luxury-white font-medium drop-shadow-[0_0_8px_rgba(212,175,55,0.2)]">
+                    {liveRates?.silver ? `₹${Number(liveRates.silver).toLocaleString("en-IN")}` : "Loading..."}
+                    <span className="text-xs text-luxury-gold/60 font-sans font-light"> / gram</span>
+                  </p>
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-6">Last Updated: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-6">
+                {liveRates?.lastUpdated
+                  ? `Last Updated: ${new Date(liveRates.lastUpdated).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`
+                  : "Fetching live data..."
+                }
+              </p>
             </div>
 
             <Link 
