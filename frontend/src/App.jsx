@@ -20,6 +20,7 @@ import ShopCategoryDetails from "./pages/ShopCategoryDetails";
 // Admin
 import AdminLayout from "./pages/Admin/AdminLayout";
 import ProductManager from "./pages/Admin/ProductManager";
+import UserManager from "./pages/Admin/UserManager";
 import Dashboard from "./pages/Admin/Dashboard"; 
 
 const MainLayout = () => {
@@ -65,7 +66,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="products" element={<ProductManager />} />
           <Route path="orders" element={<div className="p-10 text-white">Orders Area</div>} />
-          <Route path="users" element={<div className="p-10 text-white">User Management Area</div>} />
+          <Route path="users" element={<UserManager />} />
         </Route>
       </Routes>
     </Router>
