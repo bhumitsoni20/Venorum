@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 
@@ -24,6 +24,15 @@ import UserManager from "./pages/Admin/UserManager";
 import OrderManager from "./pages/Admin/OrderManager";
 import Dashboard from "./pages/Admin/Dashboard"; 
 
+// Scroll to top on every route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const MainLayout = () => {
   const location = useLocation();
   return (
@@ -42,6 +51,7 @@ const MainLayout = () => {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Main Public Application */}
         <Route element={<MainLayout />}>
