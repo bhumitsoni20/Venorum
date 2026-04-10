@@ -12,6 +12,7 @@ import {
   Package,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import venorumLogo from "../assets/venorum.svg";
 import { auth } from "../firebase/firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -174,9 +175,9 @@ const Navbar = () => {
         {/* Logo */}
         <Link
           to="/"
-          className="text-2xl md:text-3xl font-serif font-semibold tracking-widest text-luxury-white hover:text-luxury-gold transition-colors duration-300"
+          className="block hover:opacity-80 transition-opacity duration-300"
         >
-          VENORUM
+          <img src={venorumLogo} alt="Venorum" className="h-12 md:h-12 w-auto" />
         </Link>
 
         {/* Desktop Nav */}
