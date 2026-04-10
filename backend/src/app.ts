@@ -14,6 +14,7 @@ import cartRoutes from './routes/cartRoutes';
 import orderRoutes from './routes/orderRoutes';
 import wishlistRoutes from './routes/wishlistRoutes';
 import rateRoutes from './routes/rateRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 const app: Application = express();
 
@@ -49,6 +50,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/rates', rateRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Base route for testing
 app.get('/', (req: Request, res: Response) => {
