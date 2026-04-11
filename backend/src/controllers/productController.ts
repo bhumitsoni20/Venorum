@@ -30,8 +30,35 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find({}).populate('category', 'name mainCategory slug');
-    res.json(products);
+    const keyword = String(req.query.keyword || '');
+    const category = String(req.query.category || '');
+    const page = parseInt(String(req.query.page)) || 1;
+    const limit = parseInt(String(req.query.limit)) || 50;
+    const skip = (page - 1) * limit;
+
+    const filter: any = {};
+
+    if (keyword) {
+      filter.$or = [
+        { name: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } },
+      ];
+    }
+
+    if (category) {
+      filter.category = category;
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .populate('category', 'name mainCategory slug')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Product.countDocuments(filter),
+    ]);
+
+    res.json({ products, page, pages: Math.ceil(total / limit), total });
   } catch(error:any) {
       res.status(res.statusCode === 200 ? 500 : res.statusCode).json({ message: error.message });
   }

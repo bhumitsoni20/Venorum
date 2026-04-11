@@ -29,7 +29,8 @@ const ShopCategoryDetails = () => {
         
         if (catRes.ok && prodRes.ok) {
           const allCategories = await catRes.json();
-          const allProducts = await prodRes.json();
+          const prodData = await prodRes.json();
+          const allProducts = prodData.products || prodData;
 
           const mappedCategories = allCategories.filter(c => c.mainCategory === mainCategoryName);
           setCategories(mappedCategories);

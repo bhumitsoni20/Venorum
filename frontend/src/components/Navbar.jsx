@@ -15,11 +15,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import venorumLogo from "../assets/venorum.svg";
 import { auth } from "../firebase/firebaseConfig";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import SearchOverlay from "./SearchOverlay";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Real Auth State
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -158,6 +160,7 @@ const Navbar = () => {
   ];
 
   return (
+    <>
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? "glass py-4 shadow-lg" : "bg-transparent py-6"
@@ -203,7 +206,10 @@ const Navbar = () => {
 
         {/* Icons */}
         <div className="flex items-center space-x-8 relative">
-          <button className="text-gray-300 hover:text-luxury-gold transition-all duration-500 hover:scale-110 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="text-gray-300 hover:text-luxury-gold transition-all duration-500 hover:scale-110 hover:drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]"
+          >
             <Search size={20} strokeWidth={1.5} />
           </button>
 
@@ -376,6 +382,8 @@ const Navbar = () => {
         )}
       </AnimatePresence>
     </header>
+    <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 };
 

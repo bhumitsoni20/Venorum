@@ -19,7 +19,8 @@ const Shop = () => {
         
         if (catRes.ok && prodRes.ok) {
           setCategories(await catRes.json());
-          setProducts(await prodRes.json());
+          const prodData = await prodRes.json();
+          setProducts(prodData.products || prodData);
         }
       } catch(err) {
         console.error("Failed to fetch shop inventory:", err);
