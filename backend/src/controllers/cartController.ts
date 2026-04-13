@@ -26,12 +26,14 @@ export const getCart = async (req: any, res: Response) => {
  */
 export const addToCart = async (req: any, res: Response) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, isCustom, customDetails } = req.body;
     
-    const product = await Product.findById(productId);
-    if (!product) {
-      res.status(404).json({ message: 'Product not found' });
-      return;
+    if (!isCustom) {
+      const product = await Product.findById(productId);
+      if (!product) {
+        res.status(404).json({ message: 'Product not found' });
+        return;
+      }
     }
 
     let cart = await Cart.findOne({ user: req.user._id });
@@ -39,15 +41,19 @@ export const addToCart = async (req: any, res: Response) => {
     if (!cart) {
       cart = await Cart.create({
         user: req.user._id,
-        items: [{ product: productId, quantity: quantity || 1 }]
+        items: [{ product: productId || undefined, quantity: quantity || 1, isCustom, customDetails }]
       });
     } else {
-      const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+      let itemIndex = -1;
+      
+      if (!isCustom && productId) {
+         itemIndex = cart.items.findIndex(item => item.product?.toString() === productId && !item.isCustom);
+      }
       
       if (itemIndex > -1) {
         cart.items[itemIndex].quantity += (quantity || 1);
       } else {
-        cart.items.push({ product: productId, quantity: quantity || 1 } as any);
+        cart.items.push({ product: productId || undefined, quantity: quantity || 1, isCustom, customDetails } as any);
       }
       await cart.save();
     }
@@ -74,7 +80,7 @@ export const updateCartItem = async (req: any, res: Response) => {
       return;
     }
     
-    const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    const itemIndex = cart.items.findIndex(item => item.product?.toString() === productId);
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity = quantity;
       await cart.save();
@@ -102,7 +108,7 @@ export const removeFromCart = async (req: any, res: Response) => {
       return;
     }
     
-    cart.items = cart.items.filter(item => item.product.toString() !== productId) as any;
+    cart.items = cart.items.filter(item => item.product?.toString() !== productId) as any;
     await cart.save();
     
     const updatedCart = await Cart.findById(cart._id).populate('items.product');

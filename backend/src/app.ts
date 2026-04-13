@@ -15,6 +15,11 @@ import orderRoutes from './routes/orderRoutes';
 import wishlistRoutes from './routes/wishlistRoutes';
 import rateRoutes from './routes/rateRoutes';
 import adminRoutes from './routes/adminRoutes';
+import gemRoutes from './routes/gemRoutes';
+import customizeRoutes from './routes/customizeRoutes';
+import aiRoutes from './routes/aiRoutes';
+import metalRoutes from './routes/metalRoutes';
+import shapeRoutes from './routes/shapeRoutes';
 
 const app: Application = express();
 
@@ -51,6 +56,11 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/rates', rateRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/gems', gemRoutes);
+app.use('/api/customize', customizeRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/metals', metalRoutes);
+app.use('/api/shapes', shapeRoutes);
 
 // Base route for testing
 app.get('/', (req: Request, res: Response) => {

@@ -1,8 +1,10 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ICartItem extends Document {
-  product: mongoose.Schema.Types.ObjectId;
+  product?: mongoose.Schema.Types.ObjectId;
   quantity: number;
+  isCustom?: boolean;
+  customDetails?: any;
 }
 
 export interface ICart extends Document {
@@ -14,8 +16,10 @@ const cartItemSchema: Schema = new Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product',
-    required: true,
+    required: false,
   },
+  isCustom: { type: Boolean, default: false },
+  customDetails: { type: Object },
   quantity: {
     type: Number,
     required: true,

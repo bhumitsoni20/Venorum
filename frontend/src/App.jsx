@@ -16,6 +16,7 @@ import Cart from "./pages/Cart";
 import Consultation from "./pages/Consultation";
 import Rates from "./pages/Rates";
 import ShopCategoryDetails from "./pages/ShopCategoryDetails";
+import Customization from "./pages/Customization";
 
 // Admin
 import AdminLayout from "./pages/Admin/AdminLayout";
@@ -67,6 +68,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/consultation" element={<Consultation />} />
           <Route path="/rates" element={<Rates />} />
+          <Route path="/customization" element={<Customization />} />
           <Route path="*" element={<Home />} />
         </Route>
 
